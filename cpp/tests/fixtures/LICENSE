@@ -1,0 +1,27 @@
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+                            Preamble
+
+  The GNU General Public License is a free, copyleft license for
+software and other kinds of works.
+
+[...]
+
+For the complete license text, see:
+https://www.gnu.org/licenses/gpl-3.0.txt
+
+---
+
+Test fixtures in this directory are derived from the Chainsaw project:
+- Upstream: https://github.com/WithSecureLabs/chainsaw
+- License: GNU GPL v3
+- Baseline: c692405ecbc9703d190a67fd0679e48961a99c3a
+
+Sigma rule files (sigma_simple.yml, sigma_collection.yml) are subject to
+the Detection Rule License (DRL) 1.1. See third_party/licenses/DRL-1.1.txt
+for the complete DRL license text.
