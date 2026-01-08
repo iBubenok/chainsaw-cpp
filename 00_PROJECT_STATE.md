@@ -23,6 +23,8 @@ Step 26 завершён успешно:
   - **Linux** (GCC 14.2): сборка ✓, 48/48 тестов ✓, format-check ✓, ASan ✓
   - **macOS** (AppleClang 17.0): сборка ✓, 48/48 тестов ✓, ASan ✓
   - **Windows** (MSVC 19.44): сборка ✓, 48/48 тестов ✓
+- GitHub Actions CI: https://github.com/iBubenok/chainsaw-cpp/actions
+  - Все 10 jobs пройдены успешно (run #20832380950)
 
 ## Ключевые артефакты (Single Source of Truth)
 - Постановка задачи (SoT Step 15): `docs/requirements/TASK-0001-problem-statement.md`
