@@ -1,0 +1,17 @@
+---
+name: Expression Filter Rule
+group: Test
+description: Test rule with expression filter (not detection)
+authors:
+  - Tester
+
+kind: json
+level: high
+status: experimental
+timestamp: timestamp
+
+fields:
+  - name: Field1
+    to: data.field1
+
+filter: "data.field1 == 'test'"

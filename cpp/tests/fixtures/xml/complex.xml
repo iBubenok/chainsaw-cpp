@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Event xmlns="http://schemas.microsoft.com/win/2004/08/events/event">
+    <System>
+        <Provider Name="Security" Guid="{12345678-1234-1234-1234-123456789abc}"/>
+        <EventID>4624</EventID>
+        <Version>2</Version>
+        <Level>0</Level>
+        <Task>12544</Task>
+        <Opcode>0</Opcode>
+        <Keywords>0x8020000000000000</Keywords>
+        <TimeCreated SystemTime="2024-01-15T10:30:00.123456789Z"/>
+        <EventRecordID>12345678</EventRecordID>
+        <Computer>WORKSTATION01</Computer>
+    </System>
+    <EventData>
+        <Data Name="SubjectUserSid">S-1-5-18</Data>
+        <Data Name="SubjectUserName">SYSTEM</Data>
+        <Data Name="SubjectDomainName">NT AUTHORITY</Data>
+        <Data Name="TargetUserName">Administrator</Data>
+        <Data Name="TargetDomainName">WORKSTATION01</Data>
+        <Data Name="LogonType">3</Data>
+        <Data Name="IpAddress">192.168.1.100</Data>
+        <Data Name="IpPort">49152</Data>
+    </EventData>
+</Event>

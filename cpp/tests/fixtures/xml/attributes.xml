@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root attr="rootval" id="123">
+    <item name="first" enabled="true"/>
+    <item name="second" enabled="false"/>
+</root>

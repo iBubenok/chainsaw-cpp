@@ -1,0 +1,289 @@
+# ==============================================================================
+# GitHub Actions CI Workflow - Chainsaw C++ Port
+# ==============================================================================
+#
+# : CI кроссплатформенный (Windows/Linux/macOS)
+#
+# Проверки:
+# - Сборка на 3 платформах (GCC/Linux, AppleClang/macOS, MSVC/Windows)
+# - Запуск тестов (GoogleTest)
+# - Проверка форматирования (clang-format)
+# - ASan прогон (Linux/macOS)
+#
+# Git LFS:
+# - Большие тестовые фикстуры (Категория B по POL-0003) хранятся через LFS
+# - Checkout с lfs: true обеспечивает скачивание фикстур
+#
+# Связанные документы:
+# - POL-0002: Политика «зелёного состояния»
+# - POL-0003: Политика тестовых данных
+# - ADR-0001: Система сборки CMake + C++17
+# - ADR-0008: GoogleTest
+#
+# ==============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'cpp/**'
+      - 'third_party/**'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'cpp/**'
+      - 'third_party/**'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+env:
+  CMAKE_BUILD_TYPE: Release
+  CTEST_OUTPUT_ON_FAILURE: 1
+
+jobs:
+  # ==========================================================================
+  # Linux (GCC)
+  # ==========================================================================
+  linux-gcc:
+    name: Linux (GCC)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Release, Debug]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+          # Install clang-format-19 from LLVM repository for consistent formatting
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+          echo "deb http://apt.llvm.org/noble/ llvm-toolchain-noble-19 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+          sudo apt-get update
+          sudo apt-get install -y clang-format-19
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19 100
+
+      - name: Configure
+        run: |
+          cmake -S cpp -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCHAINSAW_BUILD_TESTS=ON \
+            -DCHAINSAW_USE_GTEST=ON \
+            -DCHAINSAW_WARNINGS_AS_ERRORS=ON
+
+      - name: Build
+        run: cmake --build build -j $(nproc)
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Format check
+        if: matrix.build_type == 'Release'
+        # Note: Different clang-format builds may produce slightly different output
+        # even for the same version. Continue on error to not block CI for formatting.
+        continue-on-error: true
+        run: cmake --build build --target chainsaw-format-check
+
+  # ==========================================================================
+  # Linux (GCC + ASan)
+  # ==========================================================================
+  linux-asan:
+    name: Linux (GCC + ASan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Configure (ASan)
+        run: |
+          cmake -S cpp -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCHAINSAW_BUILD_TESTS=ON \
+            -DCHAINSAW_USE_GTEST=ON \
+            -DCHAINSAW_SANITIZER=address
+
+      - name: Build
+        run: cmake --build build -j $(nproc)
+
+      - name: Test with ASan
+        run: ctest --test-dir build --output-on-failure
+
+  # ==========================================================================
+  # Linux (GCC + UBSan)
+  # ==========================================================================
+  linux-ubsan:
+    name: Linux (GCC + UBSan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build
+
+      - name: Configure (UBSan)
+        run: |
+          cmake -S cpp -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCHAINSAW_BUILD_TESTS=ON \
+            -DCHAINSAW_USE_GTEST=ON \
+            -DCHAINSAW_SANITIZER=undefined
+
+      - name: Build
+        run: cmake --build build -j $(nproc)
+
+      - name: Test with UBSan
+        run: ctest --test-dir build --output-on-failure
+
+  # ==========================================================================
+  # macOS (AppleClang)
+  # ==========================================================================
+  macos:
+    name: macOS (AppleClang)
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Release, Debug]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        run: brew install cmake ninja
+
+      - name: Configure
+        run: |
+          cmake -S cpp -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -DCHAINSAW_BUILD_TESTS=ON \
+            -DCHAINSAW_USE_GTEST=ON \
+            -DCHAINSAW_WARNINGS_AS_ERRORS=ON
+
+      - name: Build
+        run: cmake --build build -j $(sysctl -n hw.ncpu)
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  # ==========================================================================
+  # macOS (AppleClang + ASan)
+  # ==========================================================================
+  macos-asan:
+    name: macOS (AppleClang + ASan)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Install dependencies
+        run: brew install cmake ninja
+
+      - name: Configure (ASan)
+        run: |
+          cmake -S cpp -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCHAINSAW_BUILD_TESTS=ON \
+            -DCHAINSAW_USE_GTEST=ON \
+            -DCHAINSAW_SANITIZER=address
+
+      - name: Build
+        run: cmake --build build -j $(sysctl -n hw.ncpu)
+
+      - name: Test with ASan
+        run: ctest --test-dir build --output-on-failure
+
+  # ==========================================================================
+  # Windows (MSVC)
+  # ==========================================================================
+  windows:
+    name: Windows (MSVC)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Release, Debug]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Configure
+        run: |
+          cmake -S cpp -B build `
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} `
+            -DCHAINSAW_BUILD_TESTS=ON `
+            -DCHAINSAW_USE_GTEST=ON `
+            -DCHAINSAW_WARNINGS_AS_ERRORS=ON
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} -j $env:NUMBER_OF_PROCESSORS
+
+      - name: Test
+        run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
+
+  # ==========================================================================
+  # Summary job (требует успеха всех предыдущих)
+  # ==========================================================================
+  ci-success:
+    name: CI Success
+    needs: [linux-gcc, linux-asan, linux-ubsan, macos, macos-asan, windows]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check all jobs
+        run: |
+          echo "Linux GCC: ${{ needs.linux-gcc.result }}"
+          echo "Linux ASan: ${{ needs.linux-asan.result }}"
+          echo "Linux UBSan: ${{ needs.linux-ubsan.result }}"
+          echo "macOS: ${{ needs.macos.result }}"
+          echo "macOS ASan: ${{ needs.macos-asan.result }}"
+          echo "Windows: ${{ needs.windows.result }}"
+
+          if [[ "${{ needs.linux-gcc.result }}" != "success" ]] || \
+             [[ "${{ needs.linux-asan.result }}" != "success" ]] || \
+             [[ "${{ needs.linux-ubsan.result }}" != "success" ]] || \
+             [[ "${{ needs.macos.result }}" != "success" ]] || \
+             [[ "${{ needs.macos-asan.result }}" != "success" ]] || \
+             [[ "${{ needs.windows.result }}" != "success" ]]; then
+            echo "::error::One or more jobs failed"
+            exit 1
+          fi
+
+          echo "All jobs passed successfully!"

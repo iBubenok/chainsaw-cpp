@@ -1,0 +1,25 @@
+---
+name: Rule with Cast Fields
+group: Test
+description: Test rule with int() and str() casts
+authors:
+  - Tester
+
+kind: evtx
+level: medium
+status: experimental
+timestamp: Event.System.TimeCreated
+
+fields:
+  - name: Count
+    to: int(Event.EventData.Count)
+  - name: Message
+    to: str(Event.EventData.Message)
+  - name: Simple
+    to: Event.System.Computer
+
+filter:
+  condition: test_condition
+
+  test_condition:
+    Event.System.EventID: 1000

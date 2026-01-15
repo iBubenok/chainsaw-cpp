@@ -1,0 +1,22 @@
+---
+name: Field Name Only
+group: Test
+description: Test rule where field has only name
+authors:
+  - Tester
+
+kind: mft
+level: low
+status: stable
+timestamp: StandardInfoCreated
+
+fields:
+  - name: FullPath
+  - name: FileSize
+  - name: IsDeleted
+
+filter:
+  condition: mft_check
+
+  mft_check:
+    FullPath: '*test*'

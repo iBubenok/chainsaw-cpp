@@ -1,0 +1,25 @@
+---
+title: Security Audit Logs Cleared
+group: Log Tampering
+description: The security audit logs were cleared.
+authors:
+  - TestAuthor
+
+kind: evtx
+level: critical
+status: stable
+timestamp: Event.System.TimeCreated
+
+fields:
+  - name: Event ID
+    to: Event.System.EventID
+  - name: Record ID
+    to: Event.System.EventRecordID
+  - name: Computer
+    to: Event.System.Computer
+
+filter:
+  condition: security_log_cleared
+
+  security_log_cleared:
+    Event.System.EventID: 1102

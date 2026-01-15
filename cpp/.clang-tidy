@@ -1,0 +1,142 @@
+# ==============================================================================
+# .clang-tidy - Правила статического анализа C++
+# ==============================================================================
+#
+# REQ-SEC-0022: отсутствие UB и проверяемая безопасность памяти
+# REQ-SEC-0017: устойчивость к недоверенным входам
+# GUIDE-0001: нормы разработки
+# : интеграция базовых quality gates
+#
+# Использование:
+#   clang-tidy src/**/*.cpp -- -I include -std=c++17
+#   или через CMake: cmake -DCMAKE_CXX_CLANG_TIDY="clang-tidy" ...
+#
+# ==============================================================================
+
+---
+# Включаемые проверки
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  clang-analyzer-*,
+  -clang-analyzer-cplusplus.NewDeleteLeaks,
+  concurrency-*,
+  cppcoreguidelines-avoid-goto,
+  cppcoreguidelines-init-variables,
+  cppcoreguidelines-interfaces-global-init,
+  cppcoreguidelines-macro-usage,
+  cppcoreguidelines-no-malloc,
+  cppcoreguidelines-pro-type-cstyle-cast,
+  cppcoreguidelines-pro-type-member-init,
+  cppcoreguidelines-slicing,
+  misc-*,
+  -misc-non-private-member-variables-in-classes,
+  -misc-no-recursion,
+  -misc-use-anonymous-namespace,
+  modernize-avoid-bind,
+  modernize-deprecated-headers,
+  modernize-loop-convert,
+  modernize-make-shared,
+  modernize-make-unique,
+  modernize-pass-by-value,
+  modernize-raw-string-literal,
+  modernize-redundant-void-arg,
+  modernize-return-braced-init-list,
+  modernize-shrink-to-fit,
+  modernize-use-auto,
+  modernize-use-bool-literals,
+  modernize-use-default-member-init,
+  modernize-use-emplace,
+  modernize-use-equals-default,
+  modernize-use-equals-delete,
+  modernize-use-nodiscard,
+  modernize-use-noexcept,
+  modernize-use-nullptr,
+  modernize-use-override,
+  modernize-use-using,
+  performance-*,
+  -performance-avoid-endl,
+  portability-*,
+  readability-*,
+  -readability-braces-around-statements,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-named-parameter,
+  -readability-qualified-auto
+
+# Предупреждения как ошибки (для CI)
+WarningsAsErrors: ''
+
+# Заголовочные файлы проекта
+HeaderFilterRegex: '.*chainsaw.*'
+
+# Опции для конкретных проверок
+CheckOptions:
+  # GUIDE-0001 G-021: RAII вместо ручных new/delete
+  - key: cppcoreguidelines-no-malloc.Reallocations
+    value: 'realloc'
+  - key: cppcoreguidelines-no-malloc.Allocations
+    value: 'malloc,calloc'
+  - key: cppcoreguidelines-no-malloc.Deallocations
+    value: 'free'
+
+  # readability
+  - key: readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key: readability-identifier-naming.StructCase
+    value: CamelCase
+  - key: readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key: readability-identifier-naming.MethodCase
+    value: lower_case
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: '_'
+  - key: readability-identifier-naming.ConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
+  - key: readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key: readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key: readability-identifier-naming.TypedefCase
+    value: CamelCase
+
+  # misc
+  - key: misc-throw-by-value-catch-by-reference.CheckThrowTemporaries
+    value: true
+
+  # modernize
+  - key: modernize-use-auto.MinTypeNameLength
+    value: '5'
+  - key: modernize-use-auto.RemoveStars
+    value: false
+
+  # performance
+  - key: performance-move-const-arg.CheckTriviallyCopyableMove
+    value: false
+  - key: performance-unnecessary-value-param.AllowedTypes
+    value: ''
+
+  # bugprone
+  - key: bugprone-assert-side-effect.AssertMacros
+    value: 'assert,ASSERT'
+  - key: bugprone-assert-side-effect.CheckFunctionCalls
+    value: false
+  - key: bugprone-string-constructor.LargeLengthThreshold
+    value: '8388608'
+  - key: bugprone-string-constructor.WarnOnLargeLength
+    value: true

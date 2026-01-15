@@ -1,0 +1,21 @@
+---
+title: PowerShell Script Block
+group: PowerShell
+description: PowerShell script block auditing
+authors:
+  - Tester
+
+kind: evtx
+level: info
+status: stable
+timestamp: Event.System.TimeCreated
+
+fields:
+  - name: Event ID
+    to: Event.System.EventID
+
+filter:
+  condition: ps_block
+
+  ps_block:
+    Event.System.EventID: 4104

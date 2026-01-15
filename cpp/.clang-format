@@ -1,0 +1,148 @@
+# ==============================================================================
+# .clang-format - Правила форматирования кода C++
+# ==============================================================================
+#
+# REQ-OPS-0023: воспроизводимый цикл configure -> build -> test
+# GUIDE-0001: единый стиль кода
+# : интеграция базовых quality gates
+#
+# Использование:
+#   clang-format -i src/**/*.cpp include/**/*.hpp
+#   или через CMake target: cmake --build build --target format
+#
+# Проверка (без изменения файлов):
+#   clang-format --dry-run --Werror src/**/*.cpp include/**/*.hpp
+#
+# ==============================================================================
+
+---
+# Базовый стиль
+BasedOnStyle: Google
+
+# C++17 (ADR-0001)
+Standard: c++17
+
+# Ширина строки
+ColumnLimit: 100
+
+# Отступы
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AccessModifierOffset: -4
+
+# Выравнивание
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+AlignOperands: true
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+
+# Фигурные скобки
+BreakBeforeBraces: Attach
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# Аргументы и параметры
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortLambdasOnASingleLine: Inline
+
+# Переносы
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+BreakStringLiterals: true
+
+# Конструкторы
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+ConstructorInitializerIndentWidth: 4
+
+# Пустые строки
+EmptyLineBeforeAccessModifier: Always
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+
+# Include
+IncludeBlocks: Regroup
+IncludeCategories:
+  # Заголовки проекта chainsaw
+  - Regex: '^"chainsaw/'
+    Priority: 1
+    CaseSensitive: true
+  # Системные заголовки
+  - Regex: '^<'
+    Priority: 2
+  # Остальные
+  - Regex: '.*'
+    Priority: 3
+IncludeIsMainRegex: '(_test)?$'
+SortIncludes: true
+
+# Пробелы
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: ControlStatements
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 2
+SpacesInAngles: false
+SpacesInCStyleCastParentheses: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# Указатели и ссылки
+PointerAlignment: Left
+ReferenceAlignment: Left
+
+# Namespace
+FixNamespaceComments: true
+NamespaceIndentation: None
+
+# Прочее
+CompactNamespaces: false
+Cpp11BracedListStyle: true
+DeriveLineEnding: true
+DerivePointerAlignment: false
+IndentCaseLabels: false
+IndentPPDirectives: None
+IndentWrappedFunctionNames: false
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 19
+PenaltyBreakComment: 300
+PenaltyBreakFirstLessLess: 120
+PenaltyBreakString: 1000
+PenaltyBreakTemplateDeclaration: 10
+PenaltyExcessCharacter: 1000000
+PenaltyReturnTypeOnItsOwnLine: 200
+ReflowComments: true
+SortUsingDeclarations: true
