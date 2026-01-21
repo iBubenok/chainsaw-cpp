@@ -289,13 +289,78 @@ ParseResult parse(int argc, char** argv) {
         result.command = dump_cmd;
     } else if (str_eq(cmd, "hunt")) {
         HuntCommand hunt_cmd;
-        // STUB: парсинг аргументов hunt
+        // SPEC-SLICE-012: полный парсинг аргументов hunt
         for (int i = cmd_idx + 1; i < argc; ++i) {
             const char* arg = argv[i];
             if (str_eq(arg, "-h") || str_eq(arg, "--help")) {
                 result.ok = true;
                 result.command = HelpCommand{"hunt"};
                 return result;
+            } else if (str_eq(arg, "-r") || str_eq(arg, "--rule")) {
+                // -r, --rule <RULE> - Chainsaw rules
+                if (i + 1 < argc) {
+                    ++i;
+                    hunt_cmd.rules.push_back(platform::path_from_utf8(argv[i]));
+                }
+            } else if (str_eq(arg, "-s") || str_eq(arg, "--sigma")) {
+                // -s, --sigma <SIGMA> - Sigma rules
+                if (i + 1 < argc) {
+                    ++i;
+                    hunt_cmd.sigma.push_back(platform::path_from_utf8(argv[i]));
+                }
+            } else if (str_eq(arg, "-m") || str_eq(arg, "--mapping")) {
+                // -m, --mapping <MAPPING>
+                if (i + 1 < argc) {
+                    ++i;
+                    hunt_cmd.mapping.push_back(platform::path_from_utf8(argv[i]));
+                }
+            } else if (str_eq(arg, "-o") || str_eq(arg, "--output")) {
+                if (i + 1 < argc) {
+                    ++i;
+                    hunt_cmd.output = platform::path_from_utf8(argv[i]);
+                }
+            } else if (str_eq(arg, "--json")) {
+                hunt_cmd.json = true;
+            } else if (str_eq(arg, "--jsonl")) {
+                hunt_cmd.jsonl = true;
+            } else if (str_eq(arg, "--csv")) {
+                hunt_cmd.csv = true;
+            } else if (str_eq(arg, "--log")) {
+                hunt_cmd.log = true;
+            } else if (str_eq(arg, "-c") || str_eq(arg, "--cache-to-disk")) {
+                hunt_cmd.cache_to_disk = true;
+            } else if (str_eq(arg, "--skip-errors")) {
+                hunt_cmd.skip_errors = true;
+            } else if (str_eq(arg, "--load-unknown")) {
+                hunt_cmd.load_unknown = true;
+            } else if (str_eq(arg, "--from")) {
+                if (i + 1 < argc) {
+                    ++i;
+                    hunt_cmd.from = argv[i];
+                }
+            } else if (str_eq(arg, "--to")) {
+                if (i + 1 < argc) {
+                    ++i;
+                    hunt_cmd.to = argv[i];
+                }
+            } else if (str_eq(arg, "--timezone")) {
+                if (i + 1 < argc) {
+                    ++i;
+                    hunt_cmd.timezone = argv[i];
+                }
+            } else if (str_eq(arg, "-l") || str_eq(arg, "--local")) {
+                hunt_cmd.local = true;
+            } else if (str_eq(arg, "-w") || str_eq(arg, "--column-width")) {
+                if (i + 1 < argc) {
+                    ++i;
+                    hunt_cmd.column_width = static_cast<std::uint32_t>(std::stoul(argv[i]));
+                }
+            } else if (str_eq(arg, "-F") || str_eq(arg, "--full")) {
+                hunt_cmd.full = true;
+            } else if (str_eq(arg, "-M") || str_eq(arg, "--metadata")) {
+                hunt_cmd.metadata = true;
+            } else if (str_eq(arg, "-q")) {
+                result.global.quiet = true;
             } else if (arg[0] != '-') {
                 hunt_cmd.paths.push_back(platform::path_from_utf8(arg));
             }

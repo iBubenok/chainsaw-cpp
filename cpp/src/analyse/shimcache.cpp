@@ -82,6 +82,29 @@ std::string utf16le_to_utf8(const std::uint8_t* data, std::size_t byte_len) {
         } else if (wchar < 0x800) {
             result.push_back(static_cast<char>(0xC0 | (wchar >> 6)));
             result.push_back(static_cast<char>(0x80 | (wchar & 0x3F)));
+        } else if (wchar >= 0xD800 && wchar <= 0xDBFF) {
+            // High surrogate - handle surrogate pairs for characters above U+FFFF
+            if (i + 2 < byte_len) {
+                std::uint16_t low_surrogate = read_u16_le(data + i + 2);
+                if (low_surrogate >= 0xDC00 && low_surrogate <= 0xDFFF) {
+                    // Valid surrogate pair
+                    std::uint32_t codepoint =
+                        0x10000 + ((static_cast<std::uint32_t>(wchar - 0xD800) << 10) |
+                                   (low_surrogate - 0xDC00));
+                    // 4-byte UTF-8
+                    result.push_back(static_cast<char>(0xF0 | (codepoint >> 18)));
+                    result.push_back(static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F)));
+                    result.push_back(static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F)));
+                    result.push_back(static_cast<char>(0x80 | (codepoint & 0x3F)));
+                    i += 2;  // Skip low surrogate in next iteration
+                    continue;
+                }
+            }
+            // Invalid surrogate pair - skip
+            continue;
+        } else if (wchar >= 0xDC00 && wchar <= 0xDFFF) {
+            // Lone low surrogate - skip
+            continue;
         } else {
             result.push_back(static_cast<char>(0xE0 | (wchar >> 12)));
             result.push_back(static_cast<char>(0x80 | ((wchar >> 6) & 0x3F)));

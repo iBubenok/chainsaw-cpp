@@ -30,9 +30,10 @@ namespace chainsaw::hunt {
 // ============================================================================
 
 UUID UUID::generate() {
-    static std::random_device rd;
-    static std::mt19937_64 gen(rd());
-    static std::uniform_int_distribution<std::uint64_t> dis;
+    // Thread-local storage ensures thread safety without mutex overhead
+    thread_local std::random_device rd;
+    thread_local std::mt19937_64 gen(rd());
+    thread_local std::uniform_int_distribution<std::uint64_t> dis;
 
     UUID id;
     id.high = dis(gen);

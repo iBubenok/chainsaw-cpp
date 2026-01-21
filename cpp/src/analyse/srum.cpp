@@ -126,17 +126,22 @@ std::string win32_ts_to_iso8601(std::uint64_t win_ts) {
     auto unix_seconds = unix_100ns / 10000000ULL;
 
     std::time_t time = static_cast<std::time_t>(unix_seconds);
-    std::tm* tm = std::gmtime(&time);
-
-    if (tm == nullptr) {
+    std::tm tm_result{};
+#ifdef _WIN32
+    if (gmtime_s(&tm_result, &time) != 0) {
         return "";
     }
+#else
+    if (gmtime_r(&time, &tm_result) == nullptr) {
+        return "";
+    }
+#endif
 
     std::ostringstream oss;
-    oss << std::setfill('0') << std::setw(4) << (tm->tm_year + 1900) << "-" << std::setw(2)
-        << (tm->tm_mon + 1) << "-" << std::setw(2) << tm->tm_mday << "T" << std::setw(2)
-        << tm->tm_hour << ":" << std::setw(2) << tm->tm_min << ":" << std::setw(2) << tm->tm_sec
-        << "Z";
+    oss << std::setfill('0') << std::setw(4) << (tm_result.tm_year + 1900) << "-" << std::setw(2)
+        << (tm_result.tm_mon + 1) << "-" << std::setw(2) << tm_result.tm_mday << "T" << std::setw(2)
+        << tm_result.tm_hour << ":" << std::setw(2) << tm_result.tm_min << ":" << std::setw(2)
+        << tm_result.tm_sec << "Z";
 
     return oss.str();
 }

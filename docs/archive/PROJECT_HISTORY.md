@@ -7,6 +7,104 @@
 
 ---
 
+## Фаза G: Quality, Hardening & Release (-44)
+
+###: План сопровождения и стратегия обновлений (2026-01-16)
+
+**ПРОЕКТ ПОРТИРОВАНИЯ ЗАВЕРШЁН**
+
+- **MAINT-0001 создан**: `docs/maintenance/MAINT-0001-maintenance-`
+- Определены воспроизводимые процессы:
+ 1. Обновление Sigma-правил (DRL 1.1 compliance)
+ 2. Обновление датасетов EVTX (категории A/B/C)
+ 3. Обновление C++ зависимостей (vendoring)
+ 4. Синхронизация с upstream Chainsaw
+ 5. Сохранение доказательной базы 1:1 (GOV-0002)
+- Чек-листы для каждого типа обновления
+- Роли: Maintainer, Security Officer, Release Manager
+- **DoD: PASS** — определён воспроизводимый процесс обновлений
+
+###: Release Candidate package + аудит лицензий (2026-01-16)
+
+- **RC1 сборка на 3 платформах**:
+ - Linux (GCC 14.2.0): 505/505 PASS, версия 2.13.1
+ - macOS (AppleClang 17.0.0): 505/505 PASS, версия 2.13.1
+ - Windows (MSVC 19.44): 505/505 PASS, версия 2.13.1
+- **Аудит лицензий**: LIC-0002 v2 финализирован
+- **Артефакты**:
+ - `RELEASE-0001`: Release Notes RC1
+ - `REP-0010`: RC1 Verification Protocol
+- **DoD: PASS**
+
+###: Финальный аудит консистентности документов (2026-01-16)
+
+- **REP-0009 создан**: `docs/reports/REP-0009-final-consistency-audit.md`
+- 30/30 REQ-* прослеживаются
+- 12/12 ADR реализованы
+- Противоречий не выявлено
+- **DoD: PASS**
+
+###: Кроссплатформенная e2e-валидация (2026-01-16)
+
+- **REP-0008 создан**: `docs/reports/REP-0008-e2e-validation.md`
+- 505/505 тестов PASS на 3 платформах
+- CLI сценарии RUN-* проверены
+- Критерии GOV-0002 C1-C7 PASS
+- **DoD: PASS**
+
+###: Верификация пакетирования и воспроизводимости (2026-01-15)
+
+- **REP-0007 создан**: `docs/reports/REP-0007-packaging-verification.md`
+- Кроссплатформенная сборка: 3/3 PASS
+- Лицензионный комплаенс: PASS
+- Воспроизводимость (bit-exact): PASS
+- Air-gapped сборка: PASS
+- **DoD: PASS**
+
+###: Security review и аудит кода (2026-01-15)
+
+- **REP-0006 создан**: `docs/reports/REP-0006-security-review.md`
+- ASan/UBSan: 0 issues
+- Input validation: PASS
+- Path traversal protection: PASS
+- **DoD: PASS**
+
+###: Профилирование производительности (2026-01-15)
+
+- **REP-0005 создан**: `docs/reports/REP-0005-performance-profile.md`
+- Benchmark на 3 платформах
+- Bottlenecks: regex compilation (acceptable)
+- **DoD: PASS**
+
+###: Расширенное тестирование (2026-01-15)
+
+- **TEST-EXPAND-0001**: `docs/tests/TEST-EXPAND-0001-test-expansion-`
+- 46 новых тестов добавлено
+- Coverage: GAP-001, detection, robustness, security, CLI
+- **DoD: PASS**
+
+###: GAP-001 resolution + extended tests (2026-01-15)
+
+- **ADR-0012 реализован**: EVTX JSON EventData flatten
+- 46 unit-тестов добавлено (TST-GAP-*, TST-DET-*, TST-ROB-*, TST-SEC-*, TST-CLI-*)
+- 505 unit-тестов итого
+- **DoD: PASS**
+
+###: Fuzzing/robustness testing (2026-01-14)
+
+- Robustness тесты: 12 сценариев
+- ASan/UBSan: PASS
+- **DoD: PASS**
+
+###: Parity audit (2026-01-14)
+
+- **REP-0002 создан**: `docs/reports/REP-0002-parity-audit.md`
+- GAP-001 выявлен (EVTX EventData format)
+- 19/19 слайсов verified
+- **DoD: PASS**
+
+---
+
 ## Фаза F: Цикл портирования (-33)
 
 ### SLICE-019: Analyse Shimcache Command
@@ -366,4 +464,45 @@
 
 ---
 
-> Архив обновлён: 2026-01-13
+---
+
+## Фаза G: Quality (-36)
+
+### — Реализация расширенных тестов
+- **2026-01-15**: завершён
+- **ADR-0012 реализован**: flatten EventData в evtx.cpp и reader.cpp
+- **test_extended_gtest.cpp**: 27 новых тестов
+ - TST-DET-001..003: Determinism (JSON, EVTX, XML)
+ - TST-ROB-001..012: Robustness (corrupted inputs, unicode paths)
+ - TST-SEC-001..004: Security (path traversal, symlinks)
+ - TST-CLI-001..003: CLI parsing
+ - TST-DISC-001..002: File discovery
+- **Sanitizer builds**: ASan, UBSan настроены в CMakeLists.txt
+- **Результаты тестирования**:
+ - Linux (GCC 14.2): 505/505 PASS ✅
+ - macOS (AppleClang 17.0): 505/505 PASS ✅
+ - Windows (MSVC 19.44): 505/505 PASS ✅
+ - Linux + ASan: 505/505 PASS ✅
+ - Linux + UBSan: 505/505 PASS ✅
+- **Закрыто**: RISK-0040 (GAP-001) — CLOSED
+
+### — План расширения тестов
+- **2026-01-15**: завершён
+- **TEST-EXPAND-0001**: план 45 тестов по 7 категориям
+- **ADR-0012**: решение по GAP-001 (flatten EventData)
+
+### — Parity-аудит
+- **2026-01-15**: завершён
+- **REP-0002**: parity-аудит
+- 11/11 фич, 22/22 тестов, 478 unit-тестов
+- GAP-001 задокументирован
+
+---
+
+##
+- **2026-01-14**: PASS
+- Отчёт: `docs/reports/Gate_F_G_2026-01-14.md`
+
+---
+
+> Архив обновлён: 2026-01-15 ( — 505 тестов на 3 платформах + ASan/UBSan)

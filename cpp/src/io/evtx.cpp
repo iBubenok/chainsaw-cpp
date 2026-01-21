@@ -814,9 +814,101 @@ Value EvtxParser::parse_binxml(const std::vector<std::uint8_t>& data) {
 // Конверсия XML → JSON с _attributes
 // ============================================================================
 
+/// Проверка, является ли узел контейнером EventData/UserData (ADR-0012)
+static bool is_event_data_container(const pugi::xml_node& node) {
+    std::string name = node.name();
+    return name == "EventData" || name == "UserData";
+}
+
+/// Конверсия EventData/UserData с flatten-семантикой (ADR-0012)
+/// Превращает <Data Name="X">value</Data> в {"X": "value"}
+static Value convert_event_data_node(const pugi::xml_node& node) {
+    Value::Object obj;
+
+    // Собираем дочерние элементы с flatten-логикой
+    std::map<std::string, std::vector<std::string>> flattened;
+
+    for (const auto& child : node.children()) {
+        if (child.type() != pugi::node_element) {
+            continue;
+        }
+
+        std::string child_name = child.name();
+
+        // Проверяем наличие атрибута Name у элемента Data
+        if (child_name == "Data") {
+            auto name_attr = child.attribute("Name");
+            if (name_attr) {
+                // Используем значение Name как ключ
+                std::string key = name_attr.value();
+                std::string value;
+
+                // Получаем текстовое содержимое
+                for (const auto& text_node : child.children()) {
+                    if (text_node.type() == pugi::node_pcdata) {
+                        value += text_node.value();
+                    }
+                }
+
+                flattened[key].push_back(value);
+            } else {
+                // Data без Name — используем пустую строку как ключ или пропускаем
+                // В upstream такие элементы обрабатываются по-другому
+                std::string value;
+                for (const auto& text_node : child.children()) {
+                    if (text_node.type() == pugi::node_pcdata) {
+                        value += text_node.value();
+                    }
+                }
+                if (!value.empty()) {
+                    // Добавляем как безымянный Data элемент
+                    flattened["Data"].push_back(value);
+                }
+            }
+        } else {
+            // Другие элементы (не Data) — рекурсивно конвертируем
+            // Например, Binary элементы в EventData
+            std::string value;
+            for (const auto& text_node : child.children()) {
+                if (text_node.type() == pugi::node_pcdata) {
+                    value += text_node.value();
+                }
+            }
+            flattened[child_name].push_back(value);
+        }
+    }
+
+    // Формируем результирующий объект
+    for (auto& [key, values] : flattened) {
+        if (values.size() == 1) {
+            obj[key] = Value(values[0]);
+        } else {
+            // Несколько значений с одинаковым ключом — массив
+            Value::Array arr;
+            for (auto& v : values) {
+                arr.push_back(Value(v));
+            }
+            obj[key] = Value(std::move(arr));
+        }
+    }
+
+    // Если объект пустой — возвращаем null (как upstream)
+    if (obj.empty()) {
+        return Value();
+    }
+
+    return Value(std::move(obj));
+}
+
 /// Рекурсивная конверсия XML узла в Value с _attributes семантикой
 /// SPEC-SLICE-007 FACT-005: separate_json_attributes(true)
+/// ADR-0012: flatten EventData/UserData
 static Value convert_xml_node(const pugi::xml_node& node) {
+    // ADR-0012: специальная обработка EventData/UserData
+    if (is_event_data_container(node)) {
+        return convert_event_data_node(node);
+    }
+
     Value::Object obj;
 
     // Собираем атрибуты в отдельный объект с суффиксом "_attributes"

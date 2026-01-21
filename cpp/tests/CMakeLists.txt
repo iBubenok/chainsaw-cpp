@@ -240,4 +240,64 @@ if(GTEST_AVAILABLE)
         SOURCES test_shimcache_gtest.cpp
         LIBS chainsaw_shimcache chainsaw_reader chainsaw_platform
     )
+
+    # TST-DET/ROB/SEC/CLI: Расширенные тесты (TEST-EXPAND-0001, )
+    # P1 + P2 тесты: Determinism, Robustness, Security, CLI
+    chainsaw_add_test(test_extended_gtest
+        SOURCES test_extended_gtest.cpp
+        LIBS chainsaw_reader chainsaw_discovery chainsaw_cli chainsaw_platform
+    )
+endif()
+
+# ==============================================================================
+# Sanitizer builds (TEST-EXPAND-0001 TST-SAN-*)
+# ==============================================================================
+# Использование:
+#   cmake -DCHAINSAW_ENABLE_ASAN=ON ..
+#   cmake -DCHAINSAW_ENABLE_UBSAN=ON ..
+#   cmake -DCHAINSAW_ENABLE_ASAN=ON -DCHAINSAW_ENABLE_UBSAN=ON ..
+#
+# Поддерживаемые платформы:
+#   - Linux: GCC/Clang
+#   - macOS: Clang
+#   - Windows: MSVC (ограниченная поддержка)
+
+option(CHAINSAW_ENABLE_ASAN "Enable AddressSanitizer (ASan)" OFF)
+option(CHAINSAW_ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer (UBSan)" OFF)
+
+if(CHAINSAW_ENABLE_ASAN OR CHAINSAW_ENABLE_UBSAN)
+    message(STATUS "=== Sanitizer builds enabled ===")
+
+    # Общие флаги для sanitizers
+    set(SANITIZER_FLAGS "")
+
+    if(CHAINSAW_ENABLE_ASAN)
+        message(STATUS "  AddressSanitizer: ON")
+        if(MSVC)
+            set(SANITIZER_FLAGS "${SANITIZER_FLAGS} /fsanitize=address")
+        else()
+            set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fsanitize=address")
+        endif()
+    endif()
+
+    if(CHAINSAW_ENABLE_UBSAN)
+        message(STATUS "  UndefinedBehaviorSanitizer: ON")
+        if(MSVC)
+            message(WARNING "UBSan not fully supported on MSVC")
+        else()
+            set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fsanitize=undefined")
+        endif()
+    endif()
+
+    if(NOT MSVC)
+        # Дополнительные флаги для GCC/Clang
+        set(SANITIZER_FLAGS "${SANITIZER_FLAGS} -fno-omit-frame-pointer -g")
+    endif()
+
+    # Применяем флаги ко всем тестовым таргетам
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SANITIZER_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${SANITIZER_FLAGS}")
+
+    message(STATUS "  Sanitizer flags: ${SANITIZER_FLAGS}")
 endif()

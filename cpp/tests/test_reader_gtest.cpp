@@ -888,6 +888,115 @@ TEST_F(ReaderTestFixture, TST_XML_ComplexEvent) {
     EXPECT_EQ(eventId->as_string(), "4624");
 }
 
+// ============================================================================
+// TST-GAP-*: ADR-0012 EventData flatten tests
+// ============================================================================
+
+/// TST-GAP-001: EventData flatten — <Data Name="X">value</Data> → {"X": "value"}
+TEST_F(ReaderTestFixture, TST_GAP_001_EventDataFlatten) {
+    // ADR-0012: flatten EventData
+    auto path = create_temp_file("flatten.xml", R"(<?xml version="1.0"?>
+<Event>
+    <EventData>
+        <Data Name="SubjectUserSid">S-1-5-18</Data>
+        <Data Name="SubjectUserName">SYSTEM</Data>
+        <Data Name="TargetUserName">Admin</Data>
+    </EventData>
+</Event>)");
+
+    auto result = Reader::open(path);
+    ASSERT_TRUE(result.ok) << result.error.format();
+
+    Document doc;
+    ASSERT_TRUE(result.reader->next(doc));
+
+    auto* event = doc.data.get("Event");
+    ASSERT_NE(event, nullptr);
+
+    auto* eventData = event->get("EventData");
+    ASSERT_NE(eventData, nullptr);
+    ASSERT_TRUE(eventData->is_object());
+
+    // ADR-0012: flatten — ключи из атрибута Name
+    auto* subjectUserSid = eventData->get("SubjectUserSid");
+    ASSERT_NE(subjectUserSid, nullptr);
+    EXPECT_EQ(subjectUserSid->as_string(), "S-1-5-18");
+
+    auto* subjectUserName = eventData->get("SubjectUserName");
+    ASSERT_NE(subjectUserName, nullptr);
+    EXPECT_EQ(subjectUserName->as_string(), "SYSTEM");
+
+    auto* targetUserName = eventData->get("TargetUserName");
+    ASSERT_NE(targetUserName, nullptr);
+    EXPECT_EQ(targetUserName->as_string(), "Admin");
+}
+
+/// TST-GAP-002: UserData flatten — аналогично EventData
+TEST_F(ReaderTestFixture, TST_GAP_002_UserDataFlatten) {
+    // ADR-0012: flatten UserData
+    auto path = create_temp_file("userdata.xml", R"(<?xml version="1.0"?>
+<Event>
+    <UserData>
+        <Data Name="Field1">Value1</Data>
+        <Data Name="Field2">Value2</Data>
+    </UserData>
+</Event>)");
+
+    auto result = Reader::open(path);
+    ASSERT_TRUE(result.ok) << result.error.format();
+
+    Document doc;
+    ASSERT_TRUE(result.reader->next(doc));
+
+    auto* event = doc.data.get("Event");
+    ASSERT_NE(event, nullptr);
+
+    auto* userData = event->get("UserData");
+    ASSERT_NE(userData, nullptr);
+    ASSERT_TRUE(userData->is_object());
+
+    auto* field1 = userData->get("Field1");
+    ASSERT_NE(field1, nullptr);
+    EXPECT_EQ(field1->as_string(), "Value1");
+
+    auto* field2 = userData->get("Field2");
+    ASSERT_NE(field2, nullptr);
+    EXPECT_EQ(field2->as_string(), "Value2");
+}
+
+/// TST-GAP-003: EventData flatten — дублирующиеся Name → массив
+TEST_F(ReaderTestFixture, TST_GAP_003_EventDataDuplicateNames) {
+    // ADR-0012: несколько элементов с одинаковым Name → массив
+    auto path = create_temp_file("duplicate.xml", R"(<?xml version="1.0"?>
+<Event>
+    <EventData>
+        <Data Name="Value">First</Data>
+        <Data Name="Value">Second</Data>
+        <Data Name="Value">Third</Data>
+    </EventData>
+</Event>)");
+
+    auto result = Reader::open(path);
+    ASSERT_TRUE(result.ok) << result.error.format();
+
+    Document doc;
+    ASSERT_TRUE(result.reader->next(doc));
+
+    auto* event = doc.data.get("Event");
+    ASSERT_NE(event, nullptr);
+
+    auto* eventData = event->get("EventData");
+    ASSERT_NE(eventData, nullptr);
+
+    auto* values = eventData->get("Value");
+    ASSERT_NE(values, nullptr);
+    ASSERT_TRUE(values->is_array());
+    EXPECT_EQ(values->array_size(), 3u);
+    EXPECT_EQ(values->at(0)->as_string(), "First");
+    EXPECT_EQ(values->at(1)->as_string(), "Second");
+    EXPECT_EQ(values->at(2)->as_string(), "Third");
+}
+
 /// Дополнительный тест: XML extension case-insensitive
 TEST_F(ReaderTestFixture, TST_XML_ExtensionCaseInsensitive) {
     auto path1 = create_temp_file("test.XML", R"(<?xml version="1.0"?><root/>)");
