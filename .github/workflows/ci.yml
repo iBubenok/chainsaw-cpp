@@ -2,17 +2,17 @@
 # GitHub Actions CI Workflow - Chainsaw C++ Port
 # ==============================================================================
 #
-# : CI кроссплатформенный (Windows/Linux/macOS)
+# CI кроссплатформенный (Windows/Linux/macOS)
 #
 # Проверки:
 # - Сборка на 3 платформах (GCC/Linux, AppleClang/macOS, MSVC/Windows)
 # - Запуск тестов (GoogleTest)
 # - Проверка форматирования (clang-format)
-# - ASan прогон (Linux/macOS)
+# - ASan/UBSan прогоны (Linux/macOS)
 #
-# Git LFS:
-# - Большие тестовые фикстуры (Категория B по POL-0003) хранятся через LFS
-# - Checkout с lfs: true обеспечивает скачивание фикстур
+# Тестовые фикстуры:
+# - Бинарные фикстуры (EVTX, hive, MFT, ESEDB) хранятся в репозитории
+# - .gitattributes помечает их как binary для корректной работы Git
 #
 # Связанные документы:
 # - POL-0002: Политика «зелёного состояния»
@@ -58,8 +58,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Install dependencies
         run: |
@@ -104,8 +102,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Install dependencies
         run: |
@@ -137,8 +133,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Install dependencies
         run: |
@@ -174,8 +168,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Install dependencies
         run: brew install cmake ninja
@@ -205,8 +197,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Install dependencies
         run: brew install cmake ninja
@@ -240,8 +230,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          lfs: true
 
       - name: Configure
         run: |
